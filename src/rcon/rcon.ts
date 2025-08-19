@@ -6,6 +6,7 @@ import {
   parsePort,
   createPacket,
   PacketType,
+  defaults,
 } from "../utils.ts";
 import { Socket, createConnection } from "node:net";
 
@@ -25,11 +26,22 @@ interface QueuedPacket {
   reject: (error: Error) => void;
 }
 
-export interface RCONOptions {
+export interface RCONFullOptions {
   timeout?: number;
   autoConnect?: boolean;
   host: string;
-  port: number;
+  port: number | string;
+  password: string;
+}
+
+export interface RCONPartialOptions {
+  timeout?: number;
+  autoConnect?: boolean;
+}
+
+export interface RCONConnectOptions {
+  host: string;
+  port: number | string;
   password: string;
 }
 
@@ -57,20 +69,10 @@ export class RCON extends EventEmitter implements RCONEvents {
   private queue: Array<QueuedPacket> = [];
   private timeoutHandler: NodeJS.Timeout | null = null;
 
-  constructor(options: RCONOptions) {
+  constructor(options: RCONFullOptions | RCONPartialOptions) {
     super();
     if (!isObject(options)) {
-      throw new TypeError("RCON options must be an object");
-    }
-    if (typeof options.host !== "string") {
-      throw new TypeError("Invalid RCON host");
-    }
-    options.port = parsePort(options.port) ?? DEFAULT_RCON_PORT;
-    if (typeof options.port !== "string") {
-      throw new TypeError("Invalid RCON Port");
-    }
-    if (typeof options.password !== "string") {
-      throw new TypeError("Invalid RCON Password");
+      throw new TypeError("RCON options must be an Object");
     }
     if (options.autoConnect && typeof options.autoConnect !== "boolean") {
       throw new TypeError("Invalid RCON autoConnect");
@@ -83,26 +85,41 @@ export class RCON extends EventEmitter implements RCONEvents {
     ) {
       throw new TypeError("Invalid RCON Timeout");
     }
-    this.timeout = options.timeout ?? DEFAULT_TIMEOUT;
-    let autoConnect = options.autoConnect ?? true;
-    this.host = options.host;
-    this.port = options.port ?? DEFAULT_RCON_PORT;
-    this.password = options.password;
+    this.timeout = defaults(options.timeout, DEFAULT_TIMEOUT);
+    let autoConnect = defaults(options.autoConnect, true);
     if (autoConnect) {
-      this.connect();
+      this.connect(options as RCONConnectOptions);
     }
   }
-  public static async connect(options: RCONOptions): Promise<RCON> {
-    const rcon = new RCON(options);
-    await rcon.connect();
-    return rcon;
+  public static async connect(
+    options: RCONFullOptions | RCONPartialOptions
+  ): Promise<RCON> {
+    return new RCON(options);
   }
 
   public isConnected(): boolean {
     return this.socket !== null && this.connected && this.authenticated;
   }
 
-  public async connect(): Promise<void> {
+  public async connect(options: RCONConnectOptions): Promise<void> {
+    if (typeof options.host !== "string") {
+      throw new TypeError("Invalid RCON host");
+    }
+    this.host = options.host;
+    if (typeof options.password !== "string") {
+      throw new TypeError("Invalid RCON Password");
+    }
+    this.password = options.password;
+    if (options.port) {
+      let tempPort = parsePort(options.port);
+      if (!tempPort) {
+        throw new TypeError("Invalid RCON Port");
+      }
+      this.port = tempPort;
+    } else {
+      this.port = DEFAULT_RCON_PORT;
+    }
+
     return new Promise((resolve, reject) => {
       this.socket = createConnection(
         {
