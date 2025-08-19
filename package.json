@@ -1,0 +1,27 @@
+{
+  "name": "mc-status",
+  "description": "A library for MC servers to retrieve status, queries, and RCON into servers. Also parse and format a Motd",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "type": "module",
+  "license": "MIT",
+  "author": "BruderJulian",
+    "files": [
+    "src/"
+  ],
+  "devDependencies": {
+    "@types/node": "^24.0.10"
+  },
+  "keywords": [
+    "minecraft",
+    "mc",
+    "server",
+    "ping",
+    "mc-server-util",
+    "mcserver.io",
+    "mcstatus.io",
+    "motd",
+    "parse",
+    "convert"
+  ]
+}
