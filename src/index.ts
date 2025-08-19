@@ -1,5 +1,6 @@
 import {
   resolveSRV,
+  parseAddress,
   DEFAULT_BEDROCK_PORT,
   DEFAULT_PORT,
   DEFAULT_RCON_PORT,
@@ -17,6 +18,7 @@ export * from "./motd/types.ts";
 
 export {
   resolveSRV,
+  parseAddress,
   DEFAULT_BEDROCK_PORT,
   DEFAULT_PORT,
   DEFAULT_RCON_PORT,

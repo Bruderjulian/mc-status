@@ -1,5 +1,5 @@
 import { resolveSrv } from "dns";
-import { SRVRecord } from "./query/types.ts";
+import { SRVRecord, ParsedAddress } from "./query/types.ts";
 
 export const BASE_URL = "https://api.mcstatus.io/v2";
 export const DEFAULT_TIMEOUT = 5000;
@@ -18,12 +18,32 @@ export function parsePort(
   return parsed;
 }
 
+const addressMatch = /^([^:]+)(?::(\d{1,5}))?$/;
+
+export function parseAddress(
+  value: string,
+  defaultPort = 25565
+): ParsedAddress | null {
+  const match = value.match(addressMatch);
+  if (!Array.isArray(match)) return null;
+  const port = match[2] ? parsePort(match[2]) : defaultPort;
+  if (!port || typeof match[1] === "string") return null;
+  return {
+    host: match[1],
+    port,
+  };
+}
+
 export function isObject(value: any): value is Record<string, any> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 export function defaults<T>(value: T | undefined | null, def: T): T {
-  if (value === undefined || value === null || (typeof value === "number" && isNaN(value))) {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value === "number" && isNaN(value))
+  ) {
     return def;
   }
   return value;

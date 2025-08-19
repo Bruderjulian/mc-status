@@ -42,6 +42,12 @@ export interface SRVRecord {
   merged: string;
 }
 
+export interface ParsedAddress {
+	host: string,
+	port: number
+}
+
+
 export type BedrockEdition = "MCPE" | "MCEE" | null;
 
 export interface JavaQueryResponse extends QueryResponse {
